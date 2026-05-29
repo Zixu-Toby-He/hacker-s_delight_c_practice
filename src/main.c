@@ -54,33 +54,37 @@ int main(int argc, char* argv[])
 
 	puts("");
 	printf(
-		"    %30s = 0x%08X        %30s = 0x%08X\n", "m_32", m_32, "n_32", n_32);
+		"    %40s = 0x%08X        %40s = 0x%08X\n",
+		"m_32",
+		m_32,
+		"n_32",
+		n_32
+	);
 	puts("");
 
 	printf(
-		"    %30s = 0x%08X        %30s = 0x%08X\n",
+		"    %40s = 0x%08X        %40s = 0x%08X\n",
 		macro2str(val_rightest_one_zero(m_32)),
 		val_rightest_one_zero(m_32),
 		macro2str(val_rightest_one_zero(n_32)),
 		val_rightest_one_zero(n_32)
 	);
 	printf(
-		"    %30s = 0x%08X        %30s = 0x%08X\n",
+		"    %40s = 0x%08X        %40s = 0x%08X\n",
 		macro2str(val_rightest_zero_one(m_32)),
 		val_rightest_zero_one(m_32),
 		macro2str(val_rightest_zero_one(n_32)),
 		val_rightest_zero_one(n_32)
 	);
-
 	printf(
-		"    %30s = 0x%08X        %30s = 0x%08X\n",
+		"    %40s = 0x%08X        %40s = 0x%08X\n",
 		macro2str(val_rightest_one_to_end(m_32)),
 		val_rightest_one_to_end(m_32),
 		macro2str(val_rightest_one_to_end(n_32)),
 		val_rightest_one_to_end(n_32)
 	);
 	printf(
-		"    %30s = 0x%08X        %30s = 0x%08X\n",
+		"    %40s = 0x%08X        %40s = 0x%08X\n",
 		macro2str(val_rightest_zero_to_end(m_32)),
 		val_rightest_zero_to_end(m_32),
 		macro2str(val_rightest_zero_to_end(n_32)),
@@ -88,64 +92,87 @@ int main(int argc, char* argv[])
 	);
 
 	printf(
-		"    %30s = 0x%08X        %30s = 0x%08X\n",
+		"    %40s = 0x%08X        %40s = 0x%08X\n",
 		macro2str(val_rightest_one(m_32)),
 		val_rightest_one(m_32),
 		macro2str(val_rightest_one(n_32)),
 		val_rightest_one(n_32)
 	);
 	printf(
-		"    %30s = 0x%08X        %30s = 0x%08X\n",
+		"    %40s = 0x%08X        %40s = 0x%08X\n",
 		macro2str(val_rightest_zero(m_32)),
 		val_rightest_zero(m_32),
 		macro2str(val_rightest_zero(n_32)),
 		val_rightest_zero(n_32)
 	);
 	printf(
-		"    %30s = 0x%08X        %30s = 0x%08X\n",
+		"    %40s = 0x%08X        %40s = 0x%08X\n",
 		macro2str(val_rightest_zeros_keep(m_32)),
 		val_rightest_zeros_keep(m_32),
 		macro2str(val_rightest_zeros_keep(n_32)),
 		val_rightest_zeros_keep(n_32)
 	);
 	printf(
-		"    %30s = 0x%08X        %30s = 0x%08X\n",
+		"    %40s = 0x%08X        %40s = 0x%08X\n",
 		macro2str(val_rightest_ones_keep(m_32)),
 		val_rightest_ones_keep(m_32),
 		macro2str(val_rightest_ones_keep(n_32)),
 		val_rightest_ones_keep(n_32)
 	);
 	printf(
-		"    %30s = 0x%08X        %30s = 0x%08X\n",
+		"    %40s = 0x%08X        %40s = 0x%08X\n",
 		macro2str(val_rightest_one_split_01(m_32)),
 		val_rightest_one_split_01(m_32),
 		macro2str(val_rightest_one_split_01(n_32)),
 		val_rightest_one_split_01(n_32)
 	);
 	printf(
-		"    %30s = 0x%08X        %30s = 0x%08X\n",
+		"    %40s = 0x%08X        %40s = 0x%08X\n",
 		macro2str(val_rightest_zero_split_01(m_32)),
 		val_rightest_zero_split_01(m_32),
 		macro2str(val_rightest_zero_split_01(n_32)),
 		val_rightest_zero_split_01(n_32)
 	);
+	puts("");
 	printf(
-		"    %30s = 0x%08X        %30s = 0x%08X\n",
-		macro2str(__builtin_ctz(m_32)),
-		__builtin_ctz(m_32),
-		macro2str(__builtin_ctz(n_32)),
-		__builtin_ctz(n_32)
+		"    %40s = 0x%08X        %40s = 0x%08X\n",
+		macro2str(CTZ32(m_32)),
+		CTZ32(m_32),
+		macro2str(CTZ32(n_32)),
+		CTZ32(n_32)
 	);
-	
+	printf(
+		"    %40s = 0x%08X        %40s = 0x%08X\n",
+		macro2str(CLZ32(m_32)),
+		CLZ32(m_32),
+		macro2str(CLZ32(n_32)),
+		CLZ32(n_32)
+	);
+	printf(
+		"    %40s = 0x%08X        %40s = 0x%08X\n",
+		macro2str(PPC32(m_32)),
+		PPC32(m_32),
+		macro2str(PPC32(n_32)),
+		PPC32(n_32)
+	);
 	puts("");
 
-	//  printf(
-	//  	"    %30s = 0x%08X        %30s = 0x%08X\n",
-	//  	macro2str(val_rightest_xxx(m_32)),
-	//  	val_rightest_xxx(m_32),
-	//  	macro2str(val_rightest_xxx(n_32)),
-	//  	val_rightest_xxx(n_32)
-	//  );
+	printf(
+		"    %40s = 0x%08X        %40s = 0x%08X\n",
+		macro2str(val_next_num_same_popcount(m_32)),
+		val_next_num_same_popcount(m_32),
+		macro2str(val_next_num_same_popcount(n_32)),
+		val_next_num_same_popcount(n_32)
+	);
+	puts("");
+
+	printf(
+		"    %40s = 0x%08X        %40s = 0x%08X\n",
+		macro2str((m_32) | (-m_32)),
+		(m_32) | (-m_32),
+		macro2str((n_32) | (-n_32)),
+		(n_32) | (-n_32)
+	);
 
 	return 0;
 }

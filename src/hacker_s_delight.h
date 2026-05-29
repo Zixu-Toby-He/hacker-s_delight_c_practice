@@ -2,6 +2,7 @@
 #define __HACKER_S_DELIGHT_H__
 
 #include <stdint.h>
+#include "trans_platform.h"
 
 // 最右边的 0/1 修改
 //     val_rightest_one_zero
@@ -21,7 +22,7 @@
 //         0xF0F0F0F0 -> 0xF0F0F0F0
 //         0x0F0F0F0F -> 0x0F0F0F00
 #define val_rightest_zero_to_end(x) ((x) & ((x) + 1))
-#define val_rightest_one_to_end(x) ((x) | ((x) - 1))
+#define val_rightest_one_to_end(x)  ((x) | ((x) - 1))
 
 // 最右边的 0/1 提取
 //     val_rightest_one
@@ -30,8 +31,8 @@
 //     val_rightest_zero
 //         0xF0F0F0F0 -> 0x00000001
 //         0x0F0F0F0F -> 0x00000010
-#define val_rightest_one(x)  ((x)  & (-(x)))
-#define val_rightest_zero(x) ((~x) & (x + 1))
+#define val_rightest_one(x)  ((x)    & (-(x)))
+#define val_rightest_zero(x) ((~(x)) & ((x) + 1))
 
 // 仅保留最右边的 0/1 ，其他均置为 1/0
 //     val_rightest_one
@@ -41,8 +42,7 @@
 //         0xF0F0F0F0 -> 0x00000001
 //         0x0F0F0F0F -> 0x00000010
 #define val_rightest_zeros_keep(x)  ((x) | (-(x)))
-#define val_rightest_ones_keep(x)   ((x) & ((~x) - 1))
-
+#define val_rightest_ones_keep(x)   ((x) & ((~(x)) - 1))
 
 // 结合 keep 与提取
 //     val_rightest_zeros_keep
@@ -51,18 +51,19 @@
 //     val_rightest_ones_keep
 //         0xF0F0F0F0 -> 0x00000001
 //         0x0F0F0F0F -> 0x0000001F
-#define val_rightest_one_split_01(x)  ((x) ^ (x - 1))
-#define val_rightest_zero_split_01(x) ((x) ^ (x + 1))
+#define val_rightest_one_split_01(x)  ((x) ^ ((x) - 1))
+#define val_rightest_zero_split_01(x) ((x) ^ ((x) + 1))
 
-#if defined ( __GNUC__ )
-	#define ctz32(x) __builtin_ctzl(x)
-	#define clz32(x) __builtin_clzl(x)
-	#define ppc32(x) __builtin_popcountl(x)
-	#define ctz64(x) __builtin_ctzll(x)
-	#define clz64(x) __builtin_clzll(x)
-	#define ppc64(x) __builtin_popcountll(x)
-#else
-	// 暂不支持 ctz
-#endif
+// 消除右侧连续的 1
+//     val_crush_right_1
+//         0xF0F0F0F0 -> 0xF0F0F000
+//         0x0F0F0F0F -> 0x0F0F0F00
+#define val_crush_1(x) ((val_rightest_one(x) + (x)) & (x))
+
+// 获取 n = f(m) 使得 n 是满足
+//     n > m
+//     popcount(n) = popcount(m)
+// 的最小值
+uint32_t val_next_num_same_popcount(uint32_t);
 
 #endif
