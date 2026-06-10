@@ -166,13 +166,5 @@ int main(int argc, char* argv[])
 	);
 	puts("");
 
-	printf(
-		"    %40s = 0x%08X        %40s = 0x%08X\n",
-		macro2str((m_32) | (-m_32)),
-		(m_32) | (-m_32),
-		macro2str((n_32) | (-n_32)),
-		(n_32) | (-n_32)
-	);
-
 	return 0;
 }

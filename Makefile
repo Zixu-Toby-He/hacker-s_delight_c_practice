@@ -1,8 +1,20 @@
 # 检测操作系统，非 Linux/Windows 环境报错
 ifeq ($(OS),Windows_NT)
 	OS_TYPE := Windows
+	# 退化到 Windows 环境变量
+	ARCH_WIN := $(PROCESSOR_ARCHITECTURE)
+	ifeq ($(ARCH_WIN), AMD64)
+		ARCH := x86_64
+	else ifeq ($(ARCH_WIN), x86)
+		ARCH := i386
+	else ifeq ($(ARCH_WIN), ARM64)
+		ARCH := aarch64
+	else
+		ARCH := unknown
+	endif
 else
 	UNAME_S := $(shell uname -s)
+	ARCH    := $(shell uname -m)
 	ifeq ($(UNAME_S),Linux)
 		OS_TYPE := Linux
 	else
@@ -26,9 +38,32 @@ endif
 
 # 编译优化选项
 OPTS :=                      \
-	-Og                      \
+	-Ofast                   \
 	-ffunction-sections      \
 	-fdata-sections
+
+# 根据架构添加专用选项
+ifeq ($(ARCH), x86_64)
+    # 本地 x86_64，启用所有本地支持的指令集（包含 BMI, POPCNT, AVX2 等）
+    OPTS += -march=native -mtune=native
+else ifeq ($(ARCH), i386)
+    OPTS += -march=i686 -mtune=generic
+else ifeq ($(ARCH), i686)
+    OPTS += -march=i686 -mtune=generic
+else ifeq ($(ARCH), aarch64)
+    # ARM 64 位（如树莓派 4、鲲鹏、Apple M 系列）
+    OPTS += -march=armv8-a+fp+simd+crypto -mtune=native
+else ifeq ($(ARCH), armv7l)
+    # ARM 32 位（如树莓派 2/3）
+    OPTS += -march=armv7-a -mfpu=neon -mtune=cortex-a7
+else ifeq ($(ARCH), armv6l)
+    # 较老的 ARM（如树莓派 1）
+    OPTS += -march=armv6 -mfpu=vfp -mtune=arm1176jzf-s
+else
+    # 未知架构：不加额外选项，或只加保守的通用选项
+    # OPTS += -march=generic
+endif
+
 
 # 源文件目录与目标文件
 SRC_DIR  := src

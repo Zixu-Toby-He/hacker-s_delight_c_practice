@@ -93,6 +93,7 @@ make clean
 
 ## 移植性说明
 
+- 本项目服务于本地编译本地运行，根据本地环境检测调整编译策略，若需要交叉编译则需修改makefile里面有关操作系统以及架构的定义。
 - 宏实现为纯 C 表达式，与平台无关。
 - 内建函数部分使用 `#if defined(__GNUC__)` 保护，非 GCC 环境不会启用（可自行添加 MSVC 等编译器的替代实现）。
 - Makefile 支持 Linux 与 Windows 双平台，Windows 下需要 MinGW 环境，不支持 Cygwin（未经测试）。

@@ -199,6 +199,9 @@
 	#define CTZ64(x)                __ctz64(x)
 	#define CLZ64(x)                __clz64(x)
 	#define PPC64(x)                __popcnt64(x)
+
+
 #endif
+
 
 #endif /* __TRANS_PLATFORM_H__ */
