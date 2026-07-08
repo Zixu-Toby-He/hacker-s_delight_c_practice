@@ -3,7 +3,27 @@
 
 /* ==================== 编译器检测及通用宏 ==================== */
 
-#if defined(_MSC_VER)
+#if defined(C23)
+#elif defined(C11)
+#endif
+
+#if defined(__GNUC__) || defined(__clang__)
+	/* GCC, Clang, MinGW64-GCC, gcc-eabi-none, Keil ARM Compiler 6 (armclang) */
+	#define ASM                     __asm__
+	#define INLINE                  inline
+	#define STATIC_INLINE           static inline
+	#define STATIC_FORCEINLINE      __attribute__((always_inline)) static inline
+	#define WEAK                    __attribute__((weak))
+
+	/* 直接映射到内置函数 */
+	#define CTZ32(x)                __builtin_ctz(x)
+	#define CLZ32(x)                __builtin_clz(x)
+	#define PPC32(x)                __builtin_popcount(x)
+	#define CTZ64(x)                __builtin_ctzll(x)
+	#define CLZ64(x)                __builtin_clzll(x)
+	#define PPC64(x)                __builtin_popcountll(x)
+
+#elif defined(_MSC_VER)
 	/* Microsoft Visual Studio (含 Windows 平台) */
 	#define ASM                     __asm
 	#define INLINE                  __inline
@@ -47,22 +67,6 @@
 	#define CLZ64(x)                __clz64(x)
 	#define PPC64(x)                __popcnt64(x)
 
-#elif defined(__GNUC__) || defined(__clang__)
-	/* GCC, Clang, MinGW64-GCC, gcc-eabi-none, Keil ARM Compiler 6 (armclang) */
-	#define ASM                     __asm__
-	#define INLINE                  inline
-	#define STATIC_INLINE           static inline
-	#define STATIC_FORCEINLINE      __attribute__((always_inline)) static inline
-	#define WEAK                    __attribute__((weak))
-
-	/* 直接映射到内置函数 */
-	#define CTZ32(x)                __builtin_ctz(x)
-	#define CLZ32(x)                __builtin_clz(x)
-	#define PPC32(x)                __builtin_popcount(x)
-	#define CTZ64(x)                __builtin_ctzll(x)
-	#define CLZ64(x)                __builtin_clzll(x)
-	#define PPC64(x)                __builtin_popcountll(x)
-
 #elif defined(__CC_ARM) || defined(__ARMCC_VERSION)
 	/* Keil ARM Compiler 5 (经典 ARMCC) */
 	#define ASM                     __asm
@@ -71,30 +75,31 @@
 	#define STATIC_FORCEINLINE      __forceinline static
 	#define WEAK                    __weak
 
+	#include <stdint.h>
+
 	/* 软件实现 + 内联汇编 (修正: 去掉多余的 static) */
-	STATIC_INLINE unsigned int __ctz32(unsigned int x)
+	STATIC_INLINE unsigned int __ctz32(uint32_t x)
 	{
 		unsigned int res;
 		if (x == 0) return 32;
 		__asm { rbit r0, x; clz res, r0; }
 		return res;
 	}
-	STATIC_INLINE unsigned int __clz32(unsigned int x)
+	STATIC_INLINE unsigned int __clz32(uint32_t x)
 	{
 		unsigned int res;
 		__asm { clz res, x; }
 		return res;
 	}
-	STATIC_INLINE unsigned int __popcnt32(unsigned int x)
+	STATIC_INLINE unsigned int __popcnt32(uint32_t x)
 	{
-		x = x - ((x >> 1) & 0x55555555);
+		x = (x & 0x55555555) + ((x >> 1) & 0x55555555);
 		x = (x & 0x33333333) + ((x >> 2) & 0x33333333);
-		x = (x + (x >> 4)) & 0x0F0F0F0F;
-		x = x + (x >> 8);
-		x = x + (x >> 16);
-		return x & 0x3F;
+		x = (x & 0x0F0F0F0F) + ((x >> 4) & 0x0F0F0F0F);
+		x = (x & 0x00FF00FF) + ((x >> 8) & 0x00FF00FF);
+		return ((x & 0x0000FFFF) + ((x >> 16) & 0x0000FFFF));
 	}
-	STATIC_INLINE unsigned int __ctz64(unsigned long long x)
+	STATIC_INLINE unsigned int __ctz64(uint64_t x)
 	{
 		if ((unsigned int)x != 0)
 		{
@@ -105,16 +110,21 @@
 			return __ctz32((unsigned int)(x >> 32)) + 32;
 		}
 	}
-	STATIC_INLINE unsigned int __clz64(unsigned long long x)
+	STATIC_INLINE unsigned int __clz64(uint64_t x)
 	{
 		if (x >> 32)
 			return __clz32((unsigned int)(x >> 32));
 		else
 			return __clz32((unsigned int)x) + 32;
 	}
-	STATIC_INLINE unsigned int __popcnt64(unsigned long long x)
+	STATIC_INLINE unsigned int __popcnt64(uint64_t x)
 	{
-		return __popcnt32((unsigned int)x) + __popcnt32((unsigned int)(x >> 32));
+		x = (x & (uint64_t)0x5555555555555555) + ((x >>  1) & (uint64_t)0x5555555555555555);
+		x = (x & (uint64_t)0x3333333333333333) + ((x >>  2) & (uint64_t)0x3333333333333333);
+		x = (x & (uint64_t)0x0F0F0F0F0F0F0F0F) + ((x >>  4) & (uint64_t)0x0F0F0F0F0F0F0F0F);
+		x = (x & (uint64_t)0x00FF00FF00FF00FF) + ((x >>  8) & (uint64_t)0x00FF00FF00FF00FF);
+		x = (x & (uint64_t)0x0000FFFF0000FFFF) + ((x >> 16) & (uint64_t)0x0000FFFF0000FFFF);
+		return ((x & (uint64_t)0x00000000FFFFFFFF) + ((x >> 32) & (uint64_t)0x00000000FFFFFFFF));
 	}
 
 	#define CTZ32(x)                __ctz32(x)
@@ -132,65 +142,141 @@
 	#define STATIC_FORCEINLINE      static inline
 	#define WEAK
 
+	#include <stdint.h>
+
 	/* 32 位软件实现 */
-	STATIC_INLINE unsigned int __ctz32(unsigned int x)
+	STATIC_INLINE unsigned int __ctz32(uint32_t x)
 	{
-		if (x == 0) return 32;
-		unsigned int n = 0;
-		if ((x & 0xFFFF) == 0) { n += 16; x >>= 16; }
-		if ((x & 0xFF) == 0)   { n += 8;  x >>= 8;  }
-		if ((x & 0xF) == 0)    { n += 4;  x >>= 4;  }
-		if ((x & 0x3) == 0)    { n += 2;  x >>= 2;  }
-		if ((x & 0x1) == 0)    n += 1;
-		return n;
+		if (x == 0)
+		{
+			return 32;
+		}
+		else
+		{
+			x &= (-x);
+			return (
+				(((x & 0x0000FFFF) == 0) << 4) |
+				(((x & 0x00FF00FF) == 0) << 3) |
+				(((x & 0x0F0F0F0F) == 0) << 2) |
+				(((x & 0x33333333) == 0) << 1) |
+				(((x & 0x55555555) == 0)     )
+			);
+		}
 	}
-	STATIC_INLINE unsigned int __clz32(unsigned int x)
+	STATIC_INLINE unsigned int __clz32(uint32_t x)
 	{
-		if (x == 0) return 32;
-		unsigned int n = 0;
-		if ((x >> 16) == 0) { n += 16; x <<= 16; }
-		if ((x >> 24) == 0) { n += 8;  x <<= 8;  }
-		if ((x >> 28) == 0) { n += 4;  x <<= 4;  }
-		if ((x >> 30) == 0) { n += 2;  x <<= 2;  }
-		if ((x >> 31) == 0) n += 1;
-		return n;
+		if (x == 0)
+		{
+			return 32;
+		}
+		else
+		{
+			unsigned int n = 0;
+			if ((x & 0xFFFF0000) == 0)
+			{
+				n += 16;
+				x <<= 16;
+			}
+			if ((x & 0xFF000000) == 0)
+			{
+				n += 8;
+				x <<= 8;
+			}
+			if ((x & 0xF0000000) == 0)
+			{
+				n += 4;
+				x <<= 4;
+			}
+			if ((x & 0xC0000000) == 0)
+			{
+				n += 2;
+				x <<= 2;
+			}
+			if ((x & 0x80000000) == 0)
+			{
+				n += 1;
+			}
+			return n;
+		}
 	}
-	STATIC_INLINE unsigned int __popcnt32(unsigned int x)
+	STATIC_INLINE unsigned int __popcnt32(uint32_t x)
 	{
-		x = x - ((x >> 1) & 0x55555555);
+		x = (x & 0x55555555) + ((x >> 1) & 0x55555555);
 		x = (x & 0x33333333) + ((x >> 2) & 0x33333333);
-		x = (x + (x >> 4)) & 0x0F0F0F0F;
-		x = x + (x >> 8);
-		x = x + (x >> 16);
-		return x & 0x3F;
+		x = (x & 0x0F0F0F0F) + ((x >> 4) & 0x0F0F0F0F);
+		x = (x & 0x00FF00FF) + ((x >> 8) & 0x00FF00FF);
+		return ((x & 0x0000FFFF) + ((x >> 16) & 0x0000FFFF));
 	}
 
 	/* 64 位软件实现 */
-	STATIC_INLINE unsigned int __ctz64(unsigned long long x)
+	STATIC_INLINE unsigned int __ctz64(uint64_t x)
 	{
-		if ((unsigned int)x != 0)
+		if (x == 0)
 		{
-			return __ctz32((unsigned int)x);
+			return 64;
 		}
 		else
 		{
-			return __ctz32((unsigned int)(x >> 32)) + 32;
+			x &= (-x);
+			return (
+				(((x & 0x00000000FFFFFFFF) == 0) << 5) |
+				(((x & 0x0000FFFF0000FFFF) == 0) << 4) |
+				(((x & 0x00FF00FF00FF00FF) == 0) << 3) |
+				(((x & 0x0F0F0F0F0F0F0F0F) == 0) << 2) |
+				(((x & 0x3333333333333333) == 0) << 1) |
+				(((x & 0x5555555555555555) == 0)     )
+			);
 		}
 	}
-	STATIC_INLINE unsigned int __clz64(unsigned long long x)
+	STATIC_INLINE unsigned int __clz64(uint64_t x)
 	{
-		if (x >> 32)
+		if (x == 0)
 		{
-			return __clz32((unsigned int)(x >> 32));
+			return 64;
 		}
 		else
 		{
-			return __clz32((unsigned int)x) + 32;
+			unsigned int n = 0;
+			if ((x & 0xFFFFFFFF00000000) == 0)
+			{
+				n += 32;
+				x <<= 32;
+			}
+			if ((x & 0xFFFF000000000000) == 0)
+			{
+				n += 16;
+				x <<= 16;
+			}
+			if ((x & 0xFF00000000000000) == 0)
+			{
+				n += 8;
+				x <<= 8;
+			}
+			if ((x & 0xF000000000000000) == 0)
+			{
+				n += 4;
+				x <<= 4;
+			}
+			if ((x & 0xC000000000000000) == 0)
+			{
+				n += 2;
+				x <<= 2;
+			}
+			if ((x & 0x8000000000000000) == 0)
+			{
+				n += 1;
+			}
+			return n;
 		}
 	}
-	STATIC_INLINE unsigned int __popcnt64(unsigned long long x)
+	STATIC_INLINE unsigned int __popcnt64(uint64_t x)
 	{
-		return __popcnt32((unsigned int)x) + __popcnt32((unsigned int)(x >> 32));
+		x = (x & (uint64_t)0x5555555555555555) + ((x >>  1) & (uint64_t)0x5555555555555555);
+		x = (x & (uint64_t)0x3333333333333333) + ((x >>  2) & (uint64_t)0x3333333333333333);
+		x = (x & (uint64_t)0x0F0F0F0F0F0F0F0F) + ((x >>  4) & (uint64_t)0x0F0F0F0F0F0F0F0F);
+		x = (x & (uint64_t)0x00FF00FF00FF00FF) + ((x >>  8) & (uint64_t)0x00FF00FF00FF00FF);
+		x = (x & (uint64_t)0x0000FFFF0000FFFF) + ((x >> 16) & (uint64_t)0x0000FFFF0000FFFF);
+		return ((x & (uint64_t)0x00000000FFFFFFFF) + ((x >> 32) & (uint64_t)0x00000000FFFFFFFF));
 	}
 
 	#define CTZ32(x)                __ctz32(x)
