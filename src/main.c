@@ -4,6 +4,8 @@
 #include "hacker_s_delight.h"
 #include "macro_magic.h"
 
+#include "trans_platform.h"
+
 // 0xA = 0b1010
 #define As_8  0xAA
 #define As_16 0xAAAA
