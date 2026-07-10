@@ -2,7 +2,12 @@
 #define __HACKER_S_DELIGHT_H__
 
 #include <stdint.h>
+
 #include "trans_platform.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 // 最右边的 0/1 修改
 //     val_rightest_one_zero
@@ -65,5 +70,9 @@
 //     popcount(n) = popcount(m)
 // 的最小值
 uint32_t val_next_num_same_popcount(uint32_t);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -45,8 +45,9 @@ OPTS :=                      \
 	-ffunction-sections      \
 	-fdata-sections
 
-
+ifneq ($(STD) ,)
 OPTS += -std=$(STD)
+endif
 
 # 根据架构添加专用选项
 ifeq ($(ARCH), x86_64)

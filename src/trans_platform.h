@@ -1,7 +1,14 @@
 #ifndef __TRANS_PLATFORM_H__
 #define __TRANS_PLATFORM_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 /* ==================== 编译器检测及通用宏 ==================== */
+
+
 
 /* C 标准 */
 #if !defined(C23) && !defined(C11) && !defined(C99) && !defined(C89)
@@ -32,8 +39,14 @@
 	#define STATIC_FORCEINLINE      static inline
 	#endif
 
-	#include <stdbit.h>
+	#if defined(__has_include)
+		#if __has_include(<stdbit.h>)
+			#include <stdbit.h>
+			#define TRANS_HAS_STDBIT       1
+		#endif
+	#endif
 
+	#if defined(TRANS_HAS_STDBIT)
 	#ifndef CTZ32
 	#define CTZ32(x)                stdc_trailing_zeros(x)
 	#endif
@@ -51,6 +64,7 @@
 	#endif
 	#ifndef PPC64
 	#define PPC64(x)                stdc_count_ones(x)
+	#endif
 	#endif
 
 #elif defined(C11)
@@ -491,5 +505,9 @@
 
 #endif
 
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __TRANS_PLATFORM_H__ */
