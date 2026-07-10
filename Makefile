@@ -22,6 +22,9 @@ else
 	endif
 endif
 
+# 默认采用 C11编译（暂时别用C23，该标准还没固定）
+STD := c11
+
 # 设置构建子目录（使用正斜杠，便于 Make 内部处理）
 BUILD_DIR := build/$(OS_TYPE)
 
@@ -41,6 +44,9 @@ OPTS :=                      \
 	-Ofast                   \
 	-ffunction-sections      \
 	-fdata-sections
+
+
+OPTS += -std=$(STD)
 
 # 根据架构添加专用选项
 ifeq ($(ARCH), x86_64)
